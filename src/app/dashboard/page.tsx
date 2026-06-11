@@ -1,47 +1,29 @@
-"use client";
-import { signOut } from "next-auth/react";
-import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-export default function Dashboard() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [userList, setUserList] = useState([]);
+import { auth } from "@/auth";
+import { prisma } from "@/src/lib/prisma";
+import { redirect } from "next/navigation";
+import DashboardClient from "@/src/app/dashboard/DashboardClient";
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const res = await fetch("/api/auth/userdata");
-      const data = await res.json();
+export default async function DashboardPage() {
 
-      setUserList(data);
-      console.log("DATA", data);
-    };
-    fetchData();
-  }, []);
+  const session = await auth();
 
-  const handleSubmit = async (id: string) => {
-    router.push(`/chat/${id}`);
-  };
+  if (!session?.user?.id) {
+    redirect("/auth/login");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: session.user.id,
+    },
+  });
+
+  if (!user?.profileCompleted) {
+    redirect("/profile");
+  }
 
   return (
-    <>
-      {session && <p>{session?.user?.email}</p>}
-      <button onClick={() => signOut({ callbackUrl: "/auth/register" })}>
-        Logout
-      </button>
-      {userList.map((user: any) => (
-        <div key={user.id}
-          onClick={() => router.push(`/chat/${user.id}`)}
-          className="
-                p-3
-                border-b
-                cursor-pointer
-                "
-        >
-          <h3>{user.name}</h3>
-          <p>{user.email}</p>
-        </div>
-      ))}
-    </>
+    <DashboardClient
+      email={session.user.email}
+    />
   );
 }
