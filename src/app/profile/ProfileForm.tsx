@@ -1,5 +1,5 @@
 "use client";
-
+import { useRouter } from "next/navigation"
 import { useState } from "react";
 type User = {
   name?: string | null;
@@ -18,7 +18,7 @@ export default function ProfileForm({ user }: Props) {
   const [bio, setBio] = useState(user?.bio || "");
   const [city, setCity] = useState(user?.city || "");
   const [state, setState] = useState(user?.state || "");
-
+    const router=useRouter();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -46,7 +46,7 @@ export default function ProfileForm({ user }: Props) {
       }),
     });
 
-    
+    router.push("/dashboard")
   };
 
   return (
